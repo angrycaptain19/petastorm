@@ -64,8 +64,7 @@ def download_nouns_mapping():
 
     # raw_dict has the form of {id: [noun_id, text]}. We flatten it into {noun_id: text}
     raw_dict = json.loads(class_map_json.decode("utf-8"))
-    nouns_map = {k: v for k, v in raw_dict.values()}
-    return nouns_map
+    return {k: v for k, v in raw_dict.values()}
 
 
 def imagenet_directory_to_petastorm_dataset(imagenet_path, output_url, spark_master=None, parquet_files_count=100,

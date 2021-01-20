@@ -62,11 +62,7 @@ def copy_dataset(spark, source_url, target_url, field_regex, not_null_fields, ov
         field_names = list(schema.fields.keys())
         raise ValueError('Regular expressions (%s) do not match any fields (%s)', str(field_regex), str(field_names))
 
-    if fields:
-        subschema = schema.create_schema_view(fields)
-    else:
-        subschema = schema
-
+    subschema = schema.create_schema_view(fields) if fields else schema
     resolver = FilesystemResolver(target_url, spark.sparkContext._jsc.hadoopConfiguration(),
                                   hdfs_driver=hdfs_driver, user=spark.sparkContext.sparkUser())
     with materialize_dataset(spark, target_url, subschema, row_group_size_mb,

@@ -164,10 +164,7 @@ class in_pseudorandom_split(PredicateBase):
         self._predicate_field = predicate_field
         # build CDF
         subsets_high_borders = [sum(fraction_list[:i + 1]) for i in range(len(fraction_list))]
-        if subset_index:
-            fraction_low = subsets_high_borders[subset_index - 1]
-        else:
-            fraction_low = 0
+        fraction_low = subsets_high_borders[subset_index - 1] if subset_index else 0
         fraction_high = subsets_high_borders[subset_index]
         self._bucket_low = fraction_low * (sys.maxsize - 1)
         self._bucket_high = fraction_high * (sys.maxsize - 1)

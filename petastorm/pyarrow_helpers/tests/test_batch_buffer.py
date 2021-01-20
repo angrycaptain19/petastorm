@@ -29,7 +29,7 @@ def test_single_table_of_10_rows_added_and_2_batches_of_4_read():
     and verify that no more batches can be read"""
 
     # Table with two columns. Each column with 0..9 sequence
-    one_batch_of_10_records = [_new_record_batch(range(0, 10))]
+    one_batch_of_10_records = [_new_record_batch(range(10))]
     table_0_10 = pa.Table.from_batches(one_batch_of_10_records)
 
     batcher = BatchingTableQueue(4)
@@ -43,8 +43,14 @@ def test_single_table_of_10_rows_added_and_2_batches_of_4_read():
     next_batch = batcher.get()
 
     assert 4 == next_batch.num_rows
-    np.testing.assert_equal(compat_column_data(next_batch.column(0)).to_pylist(), list(range(0, 4)))
-    np.testing.assert_equal(compat_column_data(next_batch.column(1)).to_pylist(), list(range(0, 4)))
+    np.testing.assert_equal(
+        compat_column_data(next_batch.column(0)).to_pylist(), list(range(4))
+    )
+
+    np.testing.assert_equal(
+        compat_column_data(next_batch.column(1)).to_pylist(), list(range(4))
+    )
+
 
     # Get second batch of 4
     assert not batcher.empty()
@@ -60,7 +66,7 @@ def test_single_table_of_10_rows_added_and_2_batches_of_4_read():
 
 def test_two_tables_of_10_added_reading_5_batches_of_4():
     """Add two tables to batcher and read a batch that covers parts of both tables"""
-    table_0_9 = pa.Table.from_batches([_new_record_batch(range(0, 10))])
+    table_0_9 = pa.Table.from_batches([_new_record_batch(range(10))])
     table_10_19 = pa.Table.from_batches([_new_record_batch(range(10, 20))])
 
     batcher = BatchingTableQueue(4)
@@ -94,8 +100,14 @@ def test_read_batches_larger_than_a_table_added():
     next_batch = batcher.get()
 
     assert 4 == next_batch.num_rows
-    np.testing.assert_equal(compat_column_data(next_batch.column(0)).to_pylist(), list(range(0, 4)))
-    np.testing.assert_equal(compat_column_data(next_batch.column(1)).to_pylist(), list(range(0, 4)))
+    np.testing.assert_equal(
+        compat_column_data(next_batch.column(0)).to_pylist(), list(range(4))
+    )
+
+    np.testing.assert_equal(
+        compat_column_data(next_batch.column(1)).to_pylist(), list(range(4))
+    )
+
 
     assert not batcher.empty()
     next_batch = batcher.get()

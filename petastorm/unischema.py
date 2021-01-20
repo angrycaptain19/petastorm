@@ -160,13 +160,12 @@ def _numpy_to_spark_mapping():
 # the dataset on disk
 def _field_spark_dtype(field):
     if field.codec is None:
-        if field.shape == ():
-            spark_type = _numpy_to_spark_mapping().get(field.numpy_dtype, None)
-            if not spark_type:
-                raise ValueError('Was not able to map type {} to a spark type.'.format(str(field.numpy_dtype)))
-        else:
+        if field.shape != ():
             raise ValueError('An instance of non-scalar UnischemaField \'{}\' has codec set to None. '
                              'Don\'t know how to guess a Spark type for it'.format(field.name))
+        spark_type = _numpy_to_spark_mapping().get(field.numpy_dtype, None)
+        if not spark_type:
+            raise ValueError('Was not able to map type {} to a spark type.'.format(str(field.numpy_dtype)))
     else:
         spark_type = field.codec.spark_dtype()
 
@@ -252,11 +251,18 @@ class Unischema(object):
         >>>   ...
         >>> ])
         """
-        fields_str = ''
-        for field in self._fields.values():
-            fields_str += '  {}(\'{}\', {}, {}, {}, {}),\n'.format(type(field).__name__, field.name,
-                                                                   field.numpy_dtype.__name__,
-                                                                   field.shape, field.codec, field.nullable)
+        fields_str = ''.join(
+            '  {}(\'{}\', {}, {}, {}, {}),\n'.format(
+                type(field).__name__,
+                field.name,
+                field.numpy_dtype.__name__,
+                field.shape,
+                field.codec,
+                field.nullable,
+            )
+            for field in self._fields.values()
+        )
+
         return '{}({}, [\n{}])'.format(type(self).__name__, self._name, fields_str)
 
     @property
@@ -290,12 +296,11 @@ class Unischema(object):
         >>> some_schema.make_namedtuple(field1=10, field2='abc')
         """
         # TODO(yevgeni): verify types
-        typed_dict = dict()
-        for key in kargs.keys():
-            if kargs[key] is not None:
-                typed_dict[key] = kargs[key]
-            else:
-                typed_dict[key] = None
+        typed_dict = {
+            key: kargs[key] if kargs[key] is not None else None
+            for key in kargs.keys()
+        }
+
         return self._get_namedtuple()(**typed_dict)
 
     def make_namedtuple_tf(self, *args, **kargs):
@@ -337,7 +342,7 @@ class Unischema(object):
             field_type = arrow_field.type
             field_shape = ()
             if isinstance(field_type, ListType):
-                if isinstance(field_type.value_type, ListType) or isinstance(field_type.value_type, pyStructType):
+                if isinstance(field_type.value_type, (ListType, pyStructType)):
                     warnings.warn('[ARROW-1644] Ignoring unsupported structure %r for field %r'
                                   % (field_type, column_name))
                     continue
@@ -387,9 +392,8 @@ def dict_to_spark_row(unischema, row_dict):
     encoded_dict = {}
     for field_name, value in copy_row_dict.items():
         schema_field = unischema.fields[field_name]
-        if value is None:
-            if not schema_field.nullable:
-                raise ValueError('Field {} is not "nullable", but got passes a None value')
+        if value is None and not schema_field.nullable:
+            raise ValueError('Field {} is not "nullable", but got passes a None value')
         if schema_field.codec:
             encoded_dict[field_name] = schema_field.codec.encode(schema_field, value) if value is not None else None
         else:
@@ -428,12 +432,12 @@ def insert_explicit_nulls(unischema, row_dict):
 
 def _fullmatch(regex, string, flags=0):
     """Emulate python-3.4 re.fullmatch()."""
-    if six.PY2:
-        m = re.match(regex, string, flags=flags)
-        if m and (m.span() == (0, len(string))):
-            return m
-    else:
+    if not six.PY2:
         return re.fullmatch(regex, string, flags)
+
+    m = re.match(regex, string, flags=flags)
+    if m and (m.span() == (0, len(string))):
+        return m
 
 
 def match_unischema_fields(schema, field_regex):
@@ -445,25 +449,24 @@ def match_unischema_fields(schema, field_regex):
     :return: A list of :class:`~petastorm.unischema.UnischemaField` instances matching at least one of the regular
       expression patterns given by ``field_regex``.
     """
-    if field_regex:
-        unischema_fields = set()
-        legacy_unischema_fields = set()
-        for pattern in field_regex:
-            unischema_fields |= {field for field_name, field in schema.fields.items() if
-                                 _fullmatch(pattern, field_name)}
-            legacy_unischema_fields |= {field for field_name, field in schema.fields.items()
-                                        if re.match(pattern, field_name)}
-        if unischema_fields != legacy_unischema_fields:
-            field_names = {f.name for f in unischema_fields}
-            legacy_field_names = {f.name for f in legacy_unischema_fields}
-            # Sorting list of diff_names so it's easier to unit-test the message
-            diff_names = sorted(list((field_names | legacy_field_names) - (field_names & legacy_field_names)))
-            warnings.warn('schema_fields behavior has changed. Now, regular expression pattern must match'
-                          ' the entire field name. The change in the behavior affects '
-                          'the following fields: {}'.format(', '.join(diff_names)))
-        return list(unischema_fields)
-    else:
+    if not field_regex:
         return []
+    unischema_fields = set()
+    legacy_unischema_fields = set()
+    for pattern in field_regex:
+        unischema_fields |= {field for field_name, field in schema.fields.items() if
+                             _fullmatch(pattern, field_name)}
+        legacy_unischema_fields |= {field for field_name, field in schema.fields.items()
+                                    if re.match(pattern, field_name)}
+    if unischema_fields != legacy_unischema_fields:
+        field_names = {f.name for f in unischema_fields}
+        legacy_field_names = {f.name for f in legacy_unischema_fields}
+        # Sorting list of diff_names so it's easier to unit-test the message
+        diff_names = sorted(list((field_names | legacy_field_names) - (field_names & legacy_field_names)))
+        warnings.warn('schema_fields behavior has changed. Now, regular expression pattern must match'
+                      ' the entire field name. The change in the behavior affects '
+                      'the following fields: {}'.format(', '.join(diff_names)))
+    return list(unischema_fields)
 
 
 def _numpy_and_codec_from_arrow_type(field_type):

@@ -31,13 +31,13 @@ def test_eq():
     assert ngram1 == ngram1
     assert ngram1 == ngram2
 
-    assert not ngram1 != ngram1
-    assert not ngram1 != ngram2
+    assert ngram1 == ngram1
+    assert ngram1 == ngram2
 
     ngram3 = NGram({0: [TestSchema.string], 2: [TestSchema.int]}, delta_threshold=1, timestamp_field=TestSchema.int)
     assert ngram1 != ngram3
-    assert not ngram1 == ngram3
+    assert ngram1 != ngram3
 
     ngram4 = NGram({-1: [TestSchema.int], 0: [TestSchema.int]}, delta_threshold=1, timestamp_field=TestSchema.int)
     assert ngram1 != ngram4
-    assert not ngram1 == ngram4
+    assert ngram1 != ngram4

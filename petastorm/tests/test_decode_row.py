@@ -37,9 +37,9 @@ def test_nominal_case():
 
 def test_can_not_decode():
     """Make sure field name is part of the error message"""
-    row = {'matrix': 'bogus'}
-
     with pytest.raises(DecodeFieldError, match='matrix'):
+        row = {'matrix': 'bogus'}
+
         decode_row(row, MatrixSchema)
 
 

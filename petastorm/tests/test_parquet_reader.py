@@ -128,7 +128,11 @@ def test_asymetric_parquet_pieces(reader_factory, tmpdir):
 
     # We verify we have pieces with different number of row-groups
     dataset = pq.ParquetDataset(tmpdir.strpath)
-    row_group_counts = set(compat_get_metadata(piece, dataset.fs.open).num_row_groups for piece in dataset.pieces)
+    row_group_counts = {
+        compat_get_metadata(piece, dataset.fs.open).num_row_groups
+        for piece in dataset.pieces
+    }
+
     assert len(row_group_counts) > 1
 
     # Make sure we are not missing any rows.

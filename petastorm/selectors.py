@@ -63,10 +63,10 @@ class IntersectIndexSelector(RowGroupSelectorBase):
         self._single_index_selectors = single_index_selectors
 
     def get_index_names(self):
-        index_names = []
-        for single_index_selector in self._single_index_selectors:
-            index_names.append(single_index_selector.get_index_names()[0])
-        return index_names
+        return [
+            single_index_selector.get_index_names()[0]
+            for single_index_selector in self._single_index_selectors
+        ]
 
     def select_row_groups(self, index_dict):
         row_groups = self._single_index_selectors[0].select_row_groups(index_dict)
@@ -88,10 +88,10 @@ class UnionIndexSelector(RowGroupSelectorBase):
         self._single_index_selectors = single_index_selectors
 
     def get_index_names(self):
-        index_names = []
-        for single_index_selector in self._single_index_selectors:
-            index_names.append(single_index_selector.get_index_names()[0])
-        return index_names
+        return [
+            single_index_selector.get_index_names()[0]
+            for single_index_selector in self._single_index_selectors
+        ]
 
     def select_row_groups(self, index_dict):
         row_groups = set()

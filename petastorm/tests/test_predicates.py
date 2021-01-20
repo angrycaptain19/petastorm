@@ -29,19 +29,18 @@ from petastorm.unischema import dict_to_spark_row, Unischema, UnischemaField
 
 @pytest.fixture(scope="session")
 def all_values(request, tmpdir_factory):
-    all_values = set()
-    for i in range(10000):
-        all_values.add('guid_' + str(i))
-    return all_values
+    return {'guid_' + str(i) for i in range(10000)}
 
 
 def test_inclusion(all_values):
     for values in [{'guid_2', 'guid_1'}, {'guid_5', 'guid_XXX'}, {'guid_2'}]:
         test_predicate = in_set(values, 'volume_guid')
-        included_values = set()
-        for val in all_values:
-            if test_predicate.do_include({'volume_guid': val}):
-                included_values.add(val)
+        included_values = {
+            val
+            for val in all_values
+            if test_predicate.do_include({'volume_guid': val})
+        }
+
         assert included_values == all_values.intersection(values)
 
 
@@ -76,10 +75,12 @@ def test_custom_function_with_state(all_values):
 def test_negation(all_values):
     for values in [{'guid_2', 'guid_1'}, {'guid_5', 'guid_9'}, {'guid_2'}]:
         test_predicate = in_negate(in_set(values, 'volume_guid'))
-        included_values = set()
-        for val in all_values:
-            if test_predicate.do_include({'volume_guid': val}):
-                included_values.add(val)
+        included_values = {
+            val
+            for val in all_values
+            if test_predicate.do_include({'volume_guid': val})
+        }
+
         assert included_values == all_values.difference(values)
 
 
@@ -88,10 +89,12 @@ def test_and_argegarion(all_values):
         for values2 in [{'guid_2', 'guid_1'}, {'guid_5', 'guid_9'}, {'guid_2'}]:
             test_predicate = in_reduce(
                 [in_set(values1, 'volume_guid'), in_set(values2, 'volume_guid')], all)
-            included_values = set()
-            for val in all_values:
-                if test_predicate.do_include({'volume_guid': val}):
-                    included_values.add(val)
+            included_values = {
+                val
+                for val in all_values
+                if test_predicate.do_include({'volume_guid': val})
+            }
+
             assert included_values == values1.intersection(values2)
 
 
@@ -100,10 +103,12 @@ def test_or_argegarion(all_values):
         for values2 in [{'guid_2', 'guid_1'}, {'guid_5', 'guid_9'}, {'guid_2'}]:
             test_predicate = in_reduce(
                 [in_set(values1, 'volume_guid'), in_set(values2, 'volume_guid')], any)
-            included_values = set()
-            for val in all_values:
-                if test_predicate.do_include({'volume_guid': val}):
-                    included_values.add(val)
+            included_values = {
+                val
+                for val in all_values
+                if test_predicate.do_include({'volume_guid': val})
+            }
+
             assert included_values == values1.union(values2)
 
 
@@ -112,10 +117,12 @@ def test_pseudorandom_split_on_string_field(all_values):
     values_num = len(all_values)
     for idx in range(len(split_list)):
         test_predicate = in_pseudorandom_split(split_list, idx, 'string_partition_field')
-        included_values = set()
-        for val in all_values:
-            if test_predicate.do_include({'string_partition_field': val}):
-                included_values.add(val)
+        included_values = {
+            val
+            for val in all_values
+            if test_predicate.do_include({'string_partition_field': val})
+        }
+
         expected_num = values_num * split_list[idx]
         assert pytest.approx(len(included_values), expected_num * 0.1) == expected_num
 
@@ -126,10 +133,12 @@ def test_pseudorandom_split_on_integer_field():
     values_num = len(int_values)
     for idx, _ in enumerate(split_list):
         test_predicate = in_pseudorandom_split(split_list, idx, 'int_partitioning_field')
-        included_values = set()
-        for val in int_values:
-            if test_predicate.do_include({'int_partitioning_field': val}):
-                included_values.add(val)
+        included_values = {
+            val
+            for val in int_values
+            if test_predicate.do_include({'int_partitioning_field': val})
+        }
+
         expected_num = values_num * split_list[idx]
         assert pytest.approx(len(included_values), expected_num * 0.1) == expected_num
 

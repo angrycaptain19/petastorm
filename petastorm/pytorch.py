@@ -117,8 +117,7 @@ class LoaderBase(object):
         self._in_iter = True
 
         try:
-            for batch in self._iter_impl():
-                yield batch
+            yield from self._iter_impl()
         except Exception as e:
             self._error = e
             logger.error('Iteration on Petastorm DataLoader raise error: %s', repr(e))
@@ -215,17 +214,13 @@ class DataLoader(LoaderBase):
 
             # _yield_batches will emit as much batches as are allowed by the shuffling_buffer (RandomShufflingBuffer
             # will avoid underflowing below a certain number of samples to guarantee some samples decorrelation)
-            for batch in self._yield_batches(keys):
-                yield batch
-
+            yield from self._yield_batches(keys)
         # Once reader can not read new rows, we might still have a bunch of rows waiting in the shuffling buffer.
         # Telling shuffling buffer that we are finished allows to deplete the buffer completely, regardless its
         # min_after_dequeue setting.
         self._shuffling_buffer.finish()
 
-        for batch in self._yield_batches(keys):
-            yield batch
-
+        yield from self._yield_batches(keys)
         # Yield the last and partial batch
         if self._batch_acc:
             yield self.collate_fn(self._batch_acc)
@@ -338,16 +333,13 @@ class BatchedDataLoader(LoaderBase):
 
             # _yield_batches will emit as much batches as are allowed by the shuffling_buffer (RandomShufflingBuffer
             # will avoid underflowing below a certain number of samples to guarantee some samples decorrelation)
-            for batch in self._yield_batches(keys):
-                yield batch
-
+            yield from self._yield_batches(keys)
         # Once reader can not read new rows, we might still have a bunch of rows waiting in the shuffling buffer.
         # Telling shuffling buffer that we are finished allows to deplete the buffer completely, regardless its
         # min_after_dequeue setting.
         self._shuffling_buffer.finish()
 
-        for batch in self._yield_batches(keys):
-            yield batch
+        yield from self._yield_batches(keys)
 
     def _yield_batches(self, keys):
         while self._shuffling_buffer.can_retrieve():

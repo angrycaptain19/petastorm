@@ -135,19 +135,18 @@ class NdarrayCodec(DataframeColumnCodec):
 
     def encode(self, unischema_field, value):
         expected_dtype = unischema_field.numpy_dtype
-        if isinstance(value, np.ndarray):
-            if expected_dtype != value.dtype.type:
-                raise ValueError('Unexpected type of {} feature. '
-                                 'Expected {}. Got {}'.format(unischema_field.name, expected_dtype, value.dtype))
-
-            expected_shape = unischema_field.shape
-            if not _is_compliant_shape(value.shape, expected_shape):
-                raise ValueError('Unexpected dimensions of {} feature. '
-                                 'Expected {}. Got {}'.format(unischema_field.name, expected_shape, value.shape))
-        else:
+        if not isinstance(value, np.ndarray):
             raise ValueError('Unexpected type of {} feature. '
                              'Expected ndarray of {}. Got {}'.format(unischema_field.name, expected_dtype, type(value)))
 
+        if expected_dtype != value.dtype.type:
+            raise ValueError('Unexpected type of {} feature. '
+                             'Expected {}. Got {}'.format(unischema_field.name, expected_dtype, value.dtype))
+
+        expected_shape = unischema_field.shape
+        if not _is_compliant_shape(value.shape, expected_shape):
+            raise ValueError('Unexpected dimensions of {} feature. '
+                             'Expected {}. Got {}'.format(unischema_field.name, expected_shape, value.shape))
         memfile = BytesIO()
         np.save(memfile, value)
         return bytearray(memfile.getvalue())
@@ -176,19 +175,18 @@ class CompressedNdarrayCodec(DataframeColumnCodec):
 
     def encode(self, unischema_field, value):
         expected_dtype = unischema_field.numpy_dtype
-        if isinstance(value, np.ndarray):
-            if expected_dtype != value.dtype.type:
-                raise ValueError('Unexpected type of {} feature. '
-                                 'Expected {}. Got {}'.format(unischema_field.name, expected_dtype, value.dtype))
-
-            expected_shape = unischema_field.shape
-            if not _is_compliant_shape(value.shape, expected_shape):
-                raise ValueError('Unexpected dimensions of {} feature. '
-                                 'Expected {}. Got {}'.format(unischema_field.name, expected_shape, value.shape))
-        else:
+        if not isinstance(value, np.ndarray):
             raise ValueError('Unexpected type of {} feature. '
                              'Expected ndarray of {}. Got {}'.format(unischema_field.name, expected_dtype, type(value)))
 
+        if expected_dtype != value.dtype.type:
+            raise ValueError('Unexpected type of {} feature. '
+                             'Expected {}. Got {}'.format(unischema_field.name, expected_dtype, value.dtype))
+
+        expected_shape = unischema_field.shape
+        if not _is_compliant_shape(value.shape, expected_shape):
+            raise ValueError('Unexpected dimensions of {} feature. '
+                             'Expected {}. Got {}'.format(unischema_field.name, expected_shape, value.shape))
         memfile = BytesIO()
         np.savez_compressed(memfile, arr=value)
         return bytearray(memfile.getvalue())
@@ -287,8 +285,4 @@ def _is_compliant_shape(a, b):
     """
     if len(a) != len(b):
         return False
-    for i in range(len(a)):
-        if a[i] and b[i]:
-            if a[i] != b[i]:
-                return False
-    return True
+    return not any(a[i] and b[i] and a[i] != b[i] for i in range(len(a)))

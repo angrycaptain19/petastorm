@@ -44,7 +44,7 @@ class ArrowReaderWorkerResultsQueueReader(object):
 
             # Convert arrow table columns into numpy. Strings are handled differently since to_pandas() returns
             # numpy array of dtype=object.
-            result_dict = dict()
+            result_dict = {}
             for column_name, column in compat_table_columns_gen(result_table):
                 # Assume we get only one chunk since reader worker reads one rowgroup at a time
 
@@ -184,7 +184,7 @@ class ArrowReaderWorker(WorkerBase):
     def _load_rows(self, pq_file, piece, shuffle_row_drop_range):
         """Loads all rows from a piece"""
 
-        column_names_in_schema = set(field.name for field in self._schema.fields.values())
+        column_names_in_schema = {field.name for field in self._schema.fields.values()}
 
         result = self._read_with_shuffle_row_drop(piece, pq_file, column_names_in_schema, shuffle_row_drop_range)
 
@@ -203,7 +203,10 @@ class ArrowReaderWorker(WorkerBase):
                 del transformed_result[field_to_remove]
 
             transformed_result_column_set = set(transformed_result.columns)
-            transformed_schema_column_set = set([f.name for f in self._transformed_schema.fields.values()])
+            transformed_schema_column_set = {
+                f.name for f in self._transformed_schema.fields.values()
+            }
+
 
             if transformed_result_column_set != transformed_schema_column_set:
                 raise ValueError('Transformed result columns ({rc}) do not match required schema columns({sc})'
@@ -235,7 +238,7 @@ class ArrowReaderWorker(WorkerBase):
         if not predicate_column_names:
             raise ValueError('At least one field name must be returned by predicate\'s get_field() method')
 
-        all_schema_names = set(field.name for field in self._schema.fields.values())
+        all_schema_names = {field.name for field in self._schema.fields.values()}
 
         invalid_column_names = predicate_column_names - all_schema_names
         if invalid_column_names:
@@ -293,17 +296,17 @@ class ArrowReaderWorker(WorkerBase):
         # Drop columns we did not explicitly request. This may happen when a table is partitioned. Besides columns
         # requested, pyarrow will also return partition values. Having these unexpected fields will break some
         # downstream code.
-        loaded_column_names = set(column[0] for column in compat_table_columns_gen(table))
+        loaded_column_names = {column[0] for column in compat_table_columns_gen(table)}
         unasked_for_columns = loaded_column_names - column_names
         if unasked_for_columns:
             table = table.drop(unasked_for_columns)
 
-        num_rows = len(table)
         num_partitions = shuffle_row_drop_partition[1]
         this_partition = shuffle_row_drop_partition[0]
 
         if num_partitions > 1:
             data_frame_pandas = table.to_pandas()
+            num_rows = len(table)
             partition_indexes = np.floor(np.arange(num_rows) / (float(num_rows) / min(num_rows, num_partitions)))
 
             table = pa.Table.from_pandas(data_frame_pandas.loc[partition_indexes == this_partition],

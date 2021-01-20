@@ -73,9 +73,7 @@ def test_time_measure():
     wait_times = [0.0, T, T]
 
     def mock_next_item():
-        a = 1
-        for _ in six.moves.xrange(10000):
-            a += 1
+        a = 1 + sum(1 for _ in six.moves.xrange(10000))
         sleep(wait_times.pop(0))
         return 0
 

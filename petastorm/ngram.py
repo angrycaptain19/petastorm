@@ -163,14 +163,15 @@ class NGram(object):
             if not isinstance(fields[key], list):
                 raise ValueError('Each field value must be a list of unischema fields/regular expression(s)')
             for field in fields[key]:
-                if not (isinstance(field, UnischemaField) or isinstance(field, string_types)):
+                if not isinstance(field, (UnischemaField, string_types)):
                     raise ValueError('All field values must be of type UnischemaField/regular expression')
 
         if delta_threshold is None or not isinstance(delta_threshold, numbers.Number):
             raise ValueError('delta_threshold must be a number.')
 
-        if timestamp_field is None or not (isinstance(timestamp_field, UnischemaField) or
-                                           isinstance(timestamp_field, string_types)):
+        if timestamp_field is None or not isinstance(
+            timestamp_field, (UnischemaField, string_types)
+        ):
             raise ValueError('timestamp_field must be set and must be of type UnischemaField or regular expression')
 
         if timestamp_overlap is None or not isinstance(timestamp_overlap, bool):
@@ -321,19 +322,18 @@ class NGram(object):
             raise ValueError('"Elements of fields"/"timestamp field" must be either a string (regular expressions) or'
                              ' an instance of UnischemaField class.')
 
-        converted_fields = unischema_field_objects + match_unischema_fields(unischema, regex_patterns)
-
-        return converted_fields
+        return unischema_field_objects + match_unischema_fields(
+            unischema, regex_patterns
+        )
 
     def __eq__(self, other):
         if set(self.fields.keys()) != set(other.fields.keys()):
             return False
 
-        for key in self.fields.keys():
-            if set(self.fields[key]) != set(other.fields[key]):
-                return False
-
-        return True
+        return all(
+            set(self.fields[key]) == set(other.fields[key])
+            for key in self.fields.keys()
+        )
 
     def __ne__(self, other):
         return not self == other

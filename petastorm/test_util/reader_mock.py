@@ -77,6 +77,6 @@ def schema_data_generator_example(schema):
         if field.numpy_dtype is Decimal:
             fields_as_dict[field.name] = Decimal('0.0')
         else:
-            field_shape = tuple([10 if dim is None else dim for dim in field.shape])
+            field_shape = tuple(10 if dim is None else dim for dim in field.shape)
             fields_as_dict[field.name] = np.zeros(field_shape, dtype=field.numpy_dtype)
     return fields_as_dict

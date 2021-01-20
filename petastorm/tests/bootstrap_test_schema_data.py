@@ -54,10 +54,9 @@ if __name__ == '__main__':
         for opt, value in options:
             if opt in ('-h', '--help'):
                 usage_exit()
-            if opt in ('-o', '--output-dir'):
-                if value:
-                    path = value
-        if path is None or not path == 0:
+            if opt in ('-o', '--output-dir') and value:
+                path = value
+        if path is None or path != 0:
             usage_exit('Please supply an output directory.')
         else:
             make_test_metadata(path)

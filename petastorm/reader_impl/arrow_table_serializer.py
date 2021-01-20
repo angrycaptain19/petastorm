@@ -29,5 +29,4 @@ class ArrowTableSerializer(object):
 
     def deserialize(self, serialized_rows):
         reader = pa.open_stream(serialized_rows)
-        table = reader.read_all()
-        return table
+        return reader.read_all()

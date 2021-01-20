@@ -83,7 +83,7 @@ def _assert_equal_ngram(actual_ngram, expected_ngram):
             actual_field = actual_dict[field_name]
             expected_field = expected_dict[field_name]
 
-            if isinstance(expected_field, Decimal) or isinstance(expected_field, str):
+            if isinstance(expected_field, (Decimal, str)):
                 # Tensorflow returns all strings as bytes in python3. So we will need to decode it
                 actual_field = actual_field.decode()
             elif isinstance(expected_field, np.ndarray) and expected_field.dtype.type == np.unicode_:
@@ -147,13 +147,10 @@ def _test_continuous_ngram(ngram_fields, dataset_num_files_1, reader_factory):
 
     ngram = NGram(fields=ngram_fields, delta_threshold=10, timestamp_field=TestSchema.id)
     with reader_factory(dataset_num_files_1.url, schema_fields=ngram, shuffle_row_groups=False) as reader:
-        expected_id = 0
-
-        for _ in range(ngram.length):
+        for expected_id, _ in enumerate(range(ngram.length)):
             actual = next(reader)
             expected_ngram = _get_named_tuple_from_ngram(ngram, dataset_num_files_1.data, expected_id)
             np.testing.assert_equal(actual, expected_ngram)
-            expected_id = expected_id + 1
 
 
 @create_tf_graph
@@ -558,14 +555,10 @@ def _test_continuous_ngram_returns(ngram_fields, ts_field, dataset_num_files_1, 
 
     ngram = NGram(fields=ngram_fields, delta_threshold=10, timestamp_field=ts_field)
     with reader_factory(dataset_num_files_1.url, schema_fields=ngram, shuffle_row_groups=False) as reader:
-        expected_id = 0
-
-        for _ in range(ngram.length):
+        for expected_id, _ in enumerate(range(ngram.length)):
             actual = next(reader)
             expected_ngram = _get_named_tuple_from_ngram(ngram, dataset_num_files_1.data, expected_id)
             np.testing.assert_equal(actual, expected_ngram)
-            expected_id = expected_id + 1
-
     return ngram
 
 

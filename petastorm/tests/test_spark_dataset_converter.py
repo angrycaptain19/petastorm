@@ -86,7 +86,7 @@ def test_primitive(spark_test_ctx):
                     actual_ele = actual_ele.decode()
                 if col == "bin_col":
                     actual_ele = bytearray(actual_ele)
-                if col == "float_col" or col == "double_col":
+                if col in ["float_col", "double_col"]:
                     # Note that the default dtype is float32
                     assert pytest.approx(expected_ele, rel=1e-6) == actual_ele
                 else:
@@ -451,7 +451,7 @@ def test_torch_primitive(spark_test_ctx):
             for col in df.schema.names:
                 actual_ele = batch[col][0]
                 expected_ele = expected_df[i][col]
-                if col == "float_col" or col == "double_col":
+                if col in ["float_col", "double_col"]:
                     # Note that the default dtype is float32
                     assert pytest.approx(expected_ele, rel=1e-6) == actual_ele
                 else:
@@ -603,13 +603,13 @@ def test_check_dataset_file_median_size(spark_test_ctx, caplog):
     }
     with mock.patch('os.path.getsize') as mock_path_get_size:
         mock_path_get_size.side_effect = lambda p: file_size_map[p]
-        url_list = ['file://' + path for path in file_size_map.keys()]
+        url_list = ['file://' + path for path in file_size_map]
         caplog.clear()
         _check_dataset_file_median_size(url_list)
         assert 'The median size' in " ".join(caplog.messages)
 
-        for k in file_size_map:
-            file_size_map[k] *= (1024 * 1024)
+        for k, v in file_size_map.items():
+            v *= (1024 * 1024)
         caplog.clear()
         _check_dataset_file_median_size(url_list)
         assert 'The median size' not in " ".join(caplog.messages)
@@ -624,7 +624,9 @@ def test_check_dataset_file_median_size(spark_test_ctx, caplog):
 @mock.patch.dict(os.environ, {'DATABRICKS_RUNTIME_VERSION': '7.0'}, clear=True)
 def test_check_parent_cache_dir_url(spark_test_ctx, caplog):
     def log_warning_occur():
-        return 'you should specify a dbfs fuse path' in '\n'.join([r.message for r in caplog.records])
+        return 'you should specify a dbfs fuse path' in '\n'.join(
+            r.message for r in caplog.records
+        )
     with mock.patch('petastorm.spark.spark_dataset_converter._is_spark_local_mode') as mock_is_local:
         mock_is_local.return_value = False
         caplog.clear()

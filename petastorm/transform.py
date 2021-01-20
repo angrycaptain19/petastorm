@@ -79,7 +79,10 @@ def transform_schema(schema, transform_spec):
         fields.append(edited_unischema_field)
 
     if transform_spec.selected_fields is not None:
-        unknown_field_names = set(transform_spec.selected_fields) - set(f.name for f in fields)
+        unknown_field_names = set(transform_spec.selected_fields) - {
+            f.name for f in fields
+        }
+
         if unknown_field_names:
             warnings.warn('selected_fields specified some field names that are not part of the schema. '
                           'These field names will be ignored "{}". '.format(', '.join(unknown_field_names)))

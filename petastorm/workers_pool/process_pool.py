@@ -292,7 +292,7 @@ class ProcessPool(object):
         # Slow joiner problem with zeromq means that not all workers are guaranteed to have gotten
         # the stop event. Therefore we will keep sending it until all workers are stopped to prevent
         # a deadlock.
-        while any([w.poll() is None for w in self._workers]):
+        while any(w.poll() is None for w in self._workers):
             self.stop()
             sleep(.1)
 
@@ -325,7 +325,12 @@ def _serialize_result_and_send(socket, serializer, data):
 def _monitor_thread_function(main_process_pid):
     while True:
         logger.debug('Monitor thread monitoring pid: %d', main_process_pid)
-        main_process_alive = any([process.pid for process in process_iter() if process.pid == main_process_pid])
+        main_process_alive = any(
+            process.pid
+            for process in process_iter()
+            if process.pid == main_process_pid
+        )
+
         if not main_process_alive:
             logger.debug('Main process with pid %d is dead. Killing worker', main_process_pid)
             os._exit(0)

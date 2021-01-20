@@ -65,7 +65,7 @@ def decode_row(row, schema):
     :param schema: unischema object
     :return:
     """
-    decoded_row = dict()
+    decoded_row = {}
     for field_name_unicode, _ in row.items():
         field_name = str(field_name_unicode)
         if field_name in schema.fields:

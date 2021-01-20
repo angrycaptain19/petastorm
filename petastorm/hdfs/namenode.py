@@ -55,13 +55,13 @@ class HdfsNamenodeResolver(object):
                         '{}/etc/hadoop/core-site.xml'.format(self._hadoop_path),
                         hadoop_configuration)
                     break
-            if hadoop_configuration is None:
-                # ensures at least an empty dict so no further checks required in member functions
-                logger.warning('Unable to populate a sensible HadoopConfiguration for namenode resolution!\n'
-                               'Path of last environment var (%s) tried [%s]. Please set up your Hadoop and \n'
-                               'define environment variable HADOOP_HOME to point to your Hadoop installation path.',
-                               self._hadoop_env, self._hadoop_path)
-                hadoop_configuration = {}
+        if hadoop_configuration is None:
+            # ensures at least an empty dict so no further checks required in member functions
+            logger.warning('Unable to populate a sensible HadoopConfiguration for namenode resolution!\n'
+                           'Path of last environment var (%s) tried [%s]. Please set up your Hadoop and \n'
+                           'define environment variable HADOOP_HOME to point to your Hadoop installation path.',
+                           self._hadoop_env, self._hadoop_path)
+            hadoop_configuration = {}
         self._hadoop_configuration = hadoop_configuration
 
     def _load_site_xml_into_dict(self, xml_path, in_dict):
@@ -115,17 +115,17 @@ class HdfsNamenodeResolver(object):
         :return: a tuple of structure ``(nameservice, list of namenodes)``
         """
         default_fs = self._hadoop_configuration.get('fs.defaultFS')
-        if default_fs:
-            nameservice = urlparse(default_fs).netloc
-            list_of_namenodes = self.resolve_hdfs_name_service(nameservice)
-            if list_of_namenodes is None:
-                raise IOError(self._build_error_string('Unable to get namenodes for '
-                                                       'default service "{}" from'
-                                                       .format(default_fs)))
-            return [nameservice, list_of_namenodes]
-        else:
+        if not default_fs:
             raise RuntimeError(
                 self._build_error_string('Failed to get property "fs.defaultFS" from'))
+
+        nameservice = urlparse(default_fs).netloc
+        list_of_namenodes = self.resolve_hdfs_name_service(nameservice)
+        if list_of_namenodes is None:
+            raise IOError(self._build_error_string('Unable to get namenodes for '
+                                                   'default service "{}" from'
+                                                   .format(default_fs)))
+        return [nameservice, list_of_namenodes]
 
 
 class HdfsConnectError(IOError):
