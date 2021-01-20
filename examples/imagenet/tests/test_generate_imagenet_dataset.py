@@ -31,7 +31,7 @@ MOCK_VARIANTS_COUNT = 3
 
 def _mock_imagenet_dir(temp_dir):
     """Creates a mock directory with 5 noun-id directores and 3 variants of the noun images. Random images are used."""
-    noun_id_to_text = dict()
+    noun_id_to_text = {}
     for i in range(MOCK_NOUNS_COUNT):
         # Make noun-id directory (e.g. n00000001 format)
         noun_id = 'n0000000{}'.format(i)

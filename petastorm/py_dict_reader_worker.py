@@ -175,7 +175,10 @@ class PyDictReaderWorker(WorkerBase):
         # pyarrow would fail if we request a column names that the dataset is partitioned by, so we strip them from
         # the `columns` argument.
         partitions = self._dataset.partitions
-        column_names = set(field.name for field in self._schema.fields.values()) - partitions.partition_names
+        column_names = {
+            field.name for field in self._schema.fields.values()
+        } - partitions.partition_names
+
 
         all_rows = self._read_with_shuffle_row_drop(piece, pq_file, column_names, shuffle_row_drop_range)
 
@@ -200,7 +203,7 @@ class PyDictReaderWorker(WorkerBase):
         if not predicate_column_names:
             raise ValueError('At least one field name must be returned by predicate\'s get_field() method')
 
-        all_schema_names = set(field.name for field in self._schema.fields.values())
+        all_schema_names = {field.name for field in self._schema.fields.values()}
 
         invalid_column_names = predicate_column_names - all_schema_names
         if invalid_column_names:

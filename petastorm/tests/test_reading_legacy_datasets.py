@@ -22,8 +22,7 @@ def dataset_urls():
     """Returns a list of legacy datasets available for testing"""
     legacy_data_directory = os.path.join(os.path.dirname(__file__), 'data', 'legacy')
     versions = os.listdir(legacy_data_directory)
-    urls = ['file://' + os.path.join(legacy_data_directory, v) for v in versions]
-    return urls
+    return ['file://' + os.path.join(legacy_data_directory, v) for v in versions]
 
 
 @pytest.mark.parametrize('legacy_dataset_url', dataset_urls())

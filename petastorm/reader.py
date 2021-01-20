@@ -48,12 +48,12 @@ _VENTILATE_EXTRA_ROWGROUPS = 2
 
 
 def normalize_dataset_url_or_urls(dataset_url_or_urls):
-    if isinstance(dataset_url_or_urls, list):
-        if not dataset_url_or_urls:
-            raise ValueError('dataset url list must be non-empty.')
-        return [normalize_dir_url(url) for url in dataset_url_or_urls]
-    else:
+    if not isinstance(dataset_url_or_urls, list):
         return normalize_dir_url(dataset_url_or_urls)
+
+    if not dataset_url_or_urls:
+        raise ValueError('dataset url list must be non-empty.')
+    return [normalize_dir_url(url) for url in dataset_url_or_urls]
 
 
 def make_reader(dataset_url,
@@ -151,10 +151,7 @@ def make_reader(dataset_url,
     if reader_pool_type == 'thread':
         reader_pool = ThreadPool(workers_count, results_queue_size)
     elif reader_pool_type == 'process':
-        if pyarrow_serialize:
-            serializer = PyArrowSerializer()
-        else:
-            serializer = PickleSerializer()
+        serializer = PyArrowSerializer() if pyarrow_serialize else PickleSerializer()
         reader_pool = ProcessPool(workers_count, serializer, zmq_copy_buffers=zmq_copy_buffers)
     elif reader_pool_type == 'dummy':
         reader_pool = DummyPool()

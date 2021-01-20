@@ -45,8 +45,6 @@ def dataset_as_rdd(dataset_url, spark_session, schema_fields=None, hdfs_driver='
         field_names = [field.name for field in schema_fields]
         dataset_df = dataset_df.select(*field_names)
 
-    dataset_rows = dataset_df.rdd \
+    return dataset_df.rdd \
         .map(lambda row: utils.decode_row(row.asDict(), schema)) \
         .map(lambda record: schema.make_namedtuple(**record))
-
-    return dataset_rows

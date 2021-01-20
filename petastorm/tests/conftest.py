@@ -92,8 +92,7 @@ def synthetic_dataset(request, tmpdir_factory):
         path = tmpdir_factory.mktemp("data").strpath
         url = 'file://' + path
         data = create_test_dataset(url, range(_ROWS_COUNT))
-        dataset = SyntheticDataset(url=url, path=path, data=data)
-        return dataset
+        return SyntheticDataset(url=url, path=path, data=data)
 
     return maybe_cached_dataset(request.config, 'synthetic_dataset', _synthetic_dataset_no_cache)
 
@@ -104,8 +103,7 @@ def scalar_dataset(request, tmpdir_factory):
         path = tmpdir_factory.mktemp("data").strpath
         url = 'file://' + path
         data = create_test_scalar_dataset(url, 100)
-        dataset = SyntheticDataset(url=url, path=path, data=data)
-        return dataset
+        return SyntheticDataset(url=url, path=path, data=data)
 
     return maybe_cached_dataset(request.config, 'scalar', _pure_parquet_dataset_no_cache)
 
@@ -118,8 +116,7 @@ def many_columns_non_petastorm_dataset(request, tmpdir_factory):
         path = tmpdir_factory.mktemp("data").strpath
         url = 'file://' + path
         data = create_many_columns_non_petastorm_dataset(url, 10)
-        dataset = SyntheticDataset(url=url, path=path, data=data)
-        return dataset
+        return SyntheticDataset(url=url, path=path, data=data)
 
     return maybe_cached_dataset(request.config, 'many_column_non_petastorm', _dataset_no_cache)
 

@@ -26,18 +26,16 @@ _PYARROW_BEFORE_015 = version.parse(pa.__version__) < version.parse('0.15.0')
 
 def compat_get_metadata(piece, open_func):
     if _PYARROW_BEFORE_013:
-        arrow_metadata = piece.get_metadata(open_func)
+        return piece.get_metadata(open_func)
     else:
-        arrow_metadata = piece.get_metadata()
-    return arrow_metadata
+        return piece.get_metadata()
 
 
 def compat_piece_read(piece, open_file_func, **kwargs):
     if _PYARROW_BEFORE_013:
-        table = piece.read(open_file_func=open_file_func, **kwargs)
+        return piece.read(open_file_func=open_file_func, **kwargs)
     else:
-        table = piece.read(**kwargs)
-    return table
+        return piece.read(**kwargs)
 
 
 def compat_table_columns_gen(table):

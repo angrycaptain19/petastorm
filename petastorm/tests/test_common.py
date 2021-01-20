@@ -71,28 +71,51 @@ def _random_binary_string_matrix(rows, cols, max_length):
 
 def _randomize_row(id_num):
     """Returns a row with random values"""
-    row_dict = {
+    return {
         TestSchema.id.name: np.int64(id_num),
         TestSchema.id2.name: np.int32(id_num % 2),
         TestSchema.id_float.name: np.float64(id_num),
         TestSchema.id_odd.name: np.bool_(id_num % 2),
-        TestSchema.partition_key.name: np.unicode_('p_{}'.format(int(id_num / 10))),
-        TestSchema.python_primitive_uint8.name: np.random.randint(0, 255, dtype=np.uint8),
-        TestSchema.image_png.name: np.random.randint(0, 255, _DEFAULT_IMAGE_SIZE).astype(np.uint8),
-        TestSchema.matrix.name: np.random.random(size=_DEFAULT_IMAGE_SIZE).astype(np.float32),
-        TestSchema.decimal.name: Decimal(np.random.randint(0, 255) / Decimal(100)),
-        TestSchema.matrix_uint16.name: np.random.randint(0, 2 ** 16 - 1, _DEFAULT_IMAGE_SIZE).astype(np.uint16),
-        TestSchema.matrix_uint32.name: np.random.randint(0, 2 ** 32 - 1, _DEFAULT_IMAGE_SIZE).astype(np.uint32),
-        TestSchema.matrix_string.name: np.asarray(_random_binary_string_matrix(2, 3, 10)).astype(np.bytes_),
+        TestSchema.partition_key.name: np.unicode_(
+            'p_{}'.format(int(id_num / 10))
+        ),
+        TestSchema.python_primitive_uint8.name: np.random.randint(
+            0, 255, dtype=np.uint8
+        ),
+        TestSchema.image_png.name: np.random.randint(
+            0, 255, _DEFAULT_IMAGE_SIZE
+        ).astype(np.uint8),
+        TestSchema.matrix.name: np.random.random(
+            size=_DEFAULT_IMAGE_SIZE
+        ).astype(np.float32),
+        TestSchema.decimal.name: Decimal(
+            np.random.randint(0, 255) / Decimal(100)
+        ),
+        TestSchema.matrix_uint16.name: np.random.randint(
+            0, 2 ** 16 - 1, _DEFAULT_IMAGE_SIZE
+        ).astype(np.uint16),
+        TestSchema.matrix_uint32.name: np.random.randint(
+            0, 2 ** 32 - 1, _DEFAULT_IMAGE_SIZE
+        ).astype(np.uint32),
+        TestSchema.matrix_string.name: np.asarray(
+            _random_binary_string_matrix(2, 3, 10)
+        ).astype(np.bytes_),
         TestSchema.empty_matrix_string.name: np.asarray([], dtype=np.string_),
         TestSchema.matrix_nullable.name: None,
-        TestSchema.sensor_name.name: np.asarray(['test_sensor'], dtype=np.unicode_),
-        TestSchema.string_array_nullable.name:
-            None if id_num % 5 == 0 else np.asarray([], dtype=np.unicode_)
-            if id_num % 4 == 0 else np.asarray([str(i + id_num) for i in range(2)], dtype=np.unicode_),
-        TestSchema.integer_nullable.name: None if id_num % 2 else np.int32(id_num),
+        TestSchema.sensor_name.name: np.asarray(
+            ['test_sensor'], dtype=np.unicode_
+        ),
+        TestSchema.string_array_nullable.name: None
+        if id_num % 5 == 0
+        else np.asarray([], dtype=np.unicode_)
+        if id_num % 4 == 0
+        else np.asarray(
+            [str(i + id_num) for i in range(2)], dtype=np.unicode_
+        ),
+        TestSchema.integer_nullable.name: None
+        if id_num % 2
+        else np.int32(id_num),
     }
-    return row_dict
 
 
 def create_test_dataset(tmp_url, rows, num_files=2, spark=None, use_summary_metadata=False):

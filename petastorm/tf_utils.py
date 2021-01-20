@@ -129,13 +129,13 @@ def _numpy_to_tf_dtypes(numpy_dtype):
     :param numpy_dtype: numpy dtype object
     :return: tensorflow dtype object
     """
-    if numpy_dtype in _NUMPY_TO_TF_DTYPES_MAPPING:
-        if numpy_dtype == np.unicode_ and sys.version_info >= (3, 0):
-            warnings.warn("Tensorflow will convert all unicode strings back to bytes type. "
-                          "You may need to decode values.", UnicodeWarning)
-        return _NUMPY_TO_TF_DTYPES_MAPPING[numpy_dtype]
-    else:
+    if numpy_dtype not in _NUMPY_TO_TF_DTYPES_MAPPING:
         raise ValueError('Unknown mapping of numpy {} to tensorflow dtype'.format(numpy_dtype))
+
+    if numpy_dtype == np.unicode_ and sys.version_info >= (3, 0):
+        warnings.warn("Tensorflow will convert all unicode strings back to bytes type. "
+                      "You may need to decode values.", UnicodeWarning)
+    return _NUMPY_TO_TF_DTYPES_MAPPING[numpy_dtype]
 
 
 def _flatten(data):
@@ -305,18 +305,17 @@ def tf_tensors(reader, shuffling_queue_capacity=0, min_after_dequeue=0):
     # NGram enabled and disabled code is quite different. It appears to be cleaner to simply go in orthogonal
     # execution paths.
 
-    if reader.batched_output:
-        if shuffling_queue_capacity > 0:
-            raise ValueError('shuffling_queue_capacity can not be used with a reader that produces '
-                             'batched_output, since each batch is a parquet read rowgroup. Extra '
-                             'shuffling of the batches does not further decrease correlation.')
+    if reader.batched_output and shuffling_queue_capacity > 0:
+        raise ValueError('shuffling_queue_capacity can not be used with a reader that produces '
+                         'batched_output, since each batch is a parquet read rowgroup. Extra '
+                         'shuffling of the batches does not further decrease correlation.')
 
     if reader.ngram:
-        result = _tf_tensors_ngram(reader, shuffling_queue_capacity, min_after_dequeue)
+        return _tf_tensors_ngram(reader, shuffling_queue_capacity, min_after_dequeue)
     else:
-        result = _tf_tensors_nonngram(reader, shuffling_queue_capacity, min_after_dequeue)
-
-    return result
+        return _tf_tensors_nonngram(
+            reader, shuffling_queue_capacity, min_after_dequeue
+        )
 
 
 def _set_shape_to_named_tuple(schema, fields, batched_output):
@@ -406,8 +405,8 @@ def _unflatten_and_set_shape(schema, ngram, fields_as_list):
     # We change the key to str format here in order to be able to use ** later to expand the dictionary as kargs.
     fields_as_dict = {str(timestep): fields_as_namedtuple[timestep]._asdict() for timestep in fields_as_namedtuple}
 
-    for timestep in fields_as_dict:
-        _set_shape(schema, fields_as_dict[timestep])
+    for timestep, value in fields_as_dict.items():
+        _set_shape(schema, value)
 
     return make_namedtuple_tf_ngram(schema, ngram, **fields_as_dict)
 

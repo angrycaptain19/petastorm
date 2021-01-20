@@ -75,7 +75,7 @@ def add_configure_spark_arguments(argparser):
 
 
 def _cli_spark_session_config_to_dict(spark_session_config):
-    config_dict = dict()
+    config_dict = {}
 
     if not spark_session_config:
         return config_dict

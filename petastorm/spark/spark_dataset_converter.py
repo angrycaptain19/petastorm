@@ -145,17 +145,20 @@ def _check_rank_and_size_consistent_with_horovod(petastorm_reader_kwargs):
     cur_shard = petastorm_reader_kwargs.get('cur_shard')
     shard_count = petastorm_reader_kwargs.get('shard_count')
 
-    if hvd_rank is not None and hvd_size is not None:
-        if cur_shard != hvd_rank or shard_count != hvd_size:
-            logger.warning(
-                'The petastorm reader arguments cur_shard(%d) and '
-                'shard_count(%d) is not consistent with horovod '
-                'environments hvd_rank(%d) and hvd_size(%d), If you want '
-                'each horovod worker train on one corresponding shard data, '
-                'you should set argument `cur_shard` to be `hvd.rank()` '
-                'and argument `shard_count` to be `hvd.size()`.',
-                cur_shard, shard_count, hvd_rank, hvd_size)
-            return False
+    if (
+        hvd_rank is not None
+        and hvd_size is not None
+        and (cur_shard != hvd_rank or shard_count != hvd_size)
+    ):
+        logger.warning(
+            'The petastorm reader arguments cur_shard(%d) and '
+            'shard_count(%d) is not consistent with horovod '
+            'environments hvd_rank(%d) and hvd_size(%d), If you want '
+            'each horovod worker train on one corresponding shard data, '
+            'you should set argument `cur_shard` to be `hvd.rank()` '
+            'and argument `shard_count` to be `hvd.size()`.',
+            cur_shard, shard_count, hvd_rank, hvd_size)
+        return False
     return True
 
 
@@ -525,7 +528,7 @@ def _convert_precision(df, dtype):
     if dtype is None:
         return df
 
-    if dtype != "float32" and dtype != "float64":
+    if dtype not in ["float32", "float64"]:
         raise ValueError("dtype {} is not supported. \
             Use 'float32' or float64".format(dtype))
 
@@ -550,8 +553,7 @@ def _convert_vector(df, dtype):
 
     for field in df.schema:
         col_name = field.name
-        if isinstance(field.dataType, VectorUDT) or \
-                isinstance(field.dataType, OldVectorUDT):
+        if isinstance(field.dataType, (VectorUDT, OldVectorUDT)):
             df = df.withColumn(col_name,
                                vector_to_array(df[col_name], dtype))
     return df
@@ -623,11 +625,11 @@ def _wait_file_available(url_list):
 
 def _check_dataset_file_median_size(url_list):
     fs, path_list = get_filesystem_and_path_or_paths(url_list)
-    RECOMMENDED_FILE_SIZE_BYTES = 50 * 1024 * 1024
-
     # TODO: also check file size for other file system.
     if isinstance(fs, LocalFileSystem):
         pool = ThreadPool(64)
+        RECOMMENDED_FILE_SIZE_BYTES = 50 * 1024 * 1024
+
         try:
             file_size_list = pool.map(os.path.getsize, path_list)
             if len(file_size_list) > 1:

@@ -205,11 +205,7 @@ def get_filesystem_and_path_or_paths(url_or_urls, hdfs_driver='libhdfs3', s3_con
     extracted from the given url(s)
     if url list given, the urls must have the same scheme and netloc.
     """
-    if isinstance(url_or_urls, list):
-        url_list = url_or_urls
-    else:
-        url_list = [url_or_urls]
-
+    url_list = url_or_urls if isinstance(url_or_urls, list) else [url_or_urls]
     parsed_url_list = [urlparse(url) for url in url_list]
 
     first_scheme = parsed_url_list[0].scheme
@@ -222,11 +218,7 @@ def get_filesystem_and_path_or_paths(url_or_urls, hdfs_driver='libhdfs3', s3_con
     fs = FilesystemResolver(url_list[0], hdfs_driver=hdfs_driver, s3_config_kwargs=s3_config_kwargs).filesystem()
     path_list = [get_dataset_path(parsed_url) for parsed_url in parsed_url_list]
 
-    if isinstance(url_or_urls, list):
-        path_or_paths = path_list
-    else:
-        path_or_paths = path_list[0]
-
+    path_or_paths = path_list if isinstance(url_or_urls, list) else path_list[0]
     return fs, path_or_paths
 
 

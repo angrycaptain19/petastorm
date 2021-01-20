@@ -141,7 +141,7 @@ def reader_throughput(dataset_url, field_regex=None, warmup_cycles_count=300, me
       the following fields: `time_mean`, `samples_per_second`, `memory_info` and `cpu`
     """
     if not reader_extra_args:
-        reader_extra_args = dict()
+        reader_extra_args = {}
 
     if spawn_new_process:
         args = copy.deepcopy(locals())
@@ -206,8 +206,8 @@ def _time_multiple_iterations(iterations, work_func, diags_info_func=None, repor
     for current_cycle in six.moves.xrange(iterations):
         work_func()
         now = time.time()
-        eps = 1e-9
         if now - last_reported_time > report_period:
+            eps = 1e-9
             message = '{:2.2f} (mean: {:2.2f}) iterations/sec.' \
                 .format(float(current_cycle - last_reported_count) / (eps + now - last_reported_time),
                         float(current_cycle) / (eps + now - start_time))

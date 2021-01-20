@@ -46,11 +46,11 @@ def generate_petastorm_dataset(output_url='file:///tmp/hello_world_dataset'):
     spark = SparkSession.builder.config('spark.driver.memory', '2g').master('local[2]').getOrCreate()
     sc = spark.sparkContext
 
-    # Wrap dataset materialization portion. Will take care of setting up spark environment variables as
-    # well as save petastorm specific metadata
-    rows_count = 10
     with materialize_dataset(spark, output_url, HelloWorldSchema, rowgroup_size_mb):
 
+        # Wrap dataset materialization portion. Will take care of setting up spark environment variables as
+        # well as save petastorm specific metadata
+        rows_count = 10
         rows_rdd = sc.parallelize(range(rows_count))\
             .map(row_generator)\
             .map(lambda x: dict_to_spark_row(HelloWorldSchema, x))

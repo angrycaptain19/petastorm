@@ -57,11 +57,11 @@ def test_normalize_shuffle_partitions(synthetic_dataset):
 
 def test_bound_size_of_output_queue_size_reader(synthetic_dataset):
     """This test is timing sensitive so it might become flaky"""
-    TIME_TO_GET_TO_STATIONARY_STATE = 0.5
-
     with make_reader(synthetic_dataset.url, reader_pool_type='process', workers_count=1) as reader:
         assert 0 == reader.diagnostics['items_produced']
         next(reader)
+        TIME_TO_GET_TO_STATIONARY_STATE = 0.5
+
         # Verify that we did not consume all rowgroups (should be 10) and ventilator throttles number of ventilated
         # items
         sleep(TIME_TO_GET_TO_STATIONARY_STATE)

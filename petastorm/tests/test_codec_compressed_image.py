@@ -59,7 +59,7 @@ def test_jpeg_quality():
     size = (300, 200, 3)
     expected_image = np.random.randint(0, 255, size=size, dtype=np.uint8)
 
-    errors = dict()
+    errors = {}
     for quality in [10, 99]:
         codec = CompressedImageCodec('jpeg', quality=quality)
         field = UnischemaField(name='field_image', numpy_dtype=np.uint8, shape=size, codec=codec, nullable=False)

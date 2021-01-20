@@ -407,10 +407,10 @@ def test_ngram_generator(synthetic_dataset):
     ngram = NGram(fields=fields, delta_threshold=1.5, timestamp_field=TestSchema.id)
 
     with make_reader(schema_fields=ngram, dataset_url=synthetic_dataset.url, reader_pool_type='dummy',
-                     shuffle_row_groups=False) as reader:
+                         shuffle_row_groups=False) as reader:
         flat_row_numpy = next(iter(_ngrams_generator(reader)))
 
-        flat_row_tf = tuple([tf.constant(x) for x in flat_row_numpy])
+        flat_row_tf = tuple(tf.constant(x) for x in flat_row_numpy)
         ngram_tf = _unflatten_and_set_shape(reader.schema, reader.ngram, flat_row_tf)
 
         with _tf_session() as sess:

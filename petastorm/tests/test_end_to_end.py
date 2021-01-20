@@ -166,11 +166,11 @@ def test_transform_function_with_predicate(synthetic_dataset, reader_factory):
     """Make sure we apply transform only after we apply the predicate"""
 
     with reader_factory(synthetic_dataset.url, schema_fields=[TestSchema.id, TestSchema.id2],
-                        predicate=in_lambda(['id2'], lambda id2: id2 == 1),
-                        transform_spec=TransformSpec(removed_fields=['id2'])) as reader:
+                            predicate=in_lambda(['id2'], lambda id2: id2 == 1),
+                            transform_spec=TransformSpec(removed_fields=['id2'])) as reader:
         rows = list(reader)
         assert 'id2' not in rows[0]._fields
-        actual_ids = np.asarray(list(row.id for row in rows))
+        actual_ids = np.asarray([row.id for row in rows])
         assert actual_ids.size > 0
         # In the test data id2 = id % 2, which means we expect only odd ids to remain after
         # we apply lambda id2: id2 == 1 predicate.
@@ -377,8 +377,8 @@ def test_shuffle_drop_ratio(synthetic_dataset, reader_factory):
 def test_predicate_on_partition(synthetic_dataset, reader_factory):
     for expected_partition_keys in [{'p_0', 'p_2'}, {'p_0'}, {'p_1', 'p_2'}]:
         with reader_factory(synthetic_dataset.url,
-                            predicate=PartitionKeyInSetPredicate(expected_partition_keys)) as reader:
-            partition_keys = set(row.partition_key for row in reader)
+                                    predicate=PartitionKeyInSetPredicate(expected_partition_keys)) as reader:
+            partition_keys = {row.partition_key for row in reader}
             assert partition_keys == expected_partition_keys
 
 
@@ -524,8 +524,8 @@ def test_invalid_schema_field(synthetic_dataset, reader_factory):
         UnischemaField('id', np.int64, (), ScalarCodec(LongType()), False),
         UnischemaField('bogus_key', np.int32, (), ScalarCodec(ShortType()), False)])
 
-    expected_values = {'bogus_key': 11, 'id': 1}
     with pytest.raises(ValueError, match='bogus_key'):
+        expected_values = {'bogus_key': 11, 'id': 1}
         reader_factory(synthetic_dataset.url, schema_fields=BogusSchema.fields.values(),
                        shuffle_row_groups=False,
                        predicate=EqualPredicate(expected_values))
@@ -630,14 +630,14 @@ def test_num_epochs_value_error(synthetic_dataset, reader_factory):
 def test_rowgroup_selector_integer_field(synthetic_dataset, reader_factory):
     """ Select row groups to read based on dataset index for integer field"""
     with reader_factory(synthetic_dataset.url, rowgroup_selector=SingleIndexSelector(TestSchema.id.name, [2, 18])) \
-            as reader:
+                as reader:
         status = [False, False]
         count = 0
         for row in reader:
-            if row.id == 2:
-                status[0] = True
             if row.id == 18:
                 status[1] = True
+            elif row.id == 2:
+                status[0] = True
             count += 1
         # both id values in reader result
         assert all(status)
@@ -664,14 +664,14 @@ def test_rowgroup_selector_multiple_fields_intersection(synthetic_dataset, reade
          SingleIndexSelector(TestSchema.id.name, [2, 18])]
     )
     with reader_factory(synthetic_dataset.url,
-                        rowgroup_selector=intersect_index_selector) as reader:
+                            rowgroup_selector=intersect_index_selector) as reader:
         count = 0
         status = [False, False, False]
         for row in reader:
-            if row.id == 2:
-                status[0] = True
             if row.id == 18:
                 status[1] = True
+            elif row.id == 2:
+                status[0] = True
             if row.sensor_name == 'test_sensor':
                 status[2] = True
             count += 1
@@ -686,14 +686,14 @@ def test_rowgroup_selector_multiple_fields_union(synthetic_dataset, reader_facto
          SingleIndexSelector(TestSchema.id.name, [2, 18])]
     )
     with reader_factory(synthetic_dataset.url,
-                        rowgroup_selector=union_index_selector) as reader:
+                            rowgroup_selector=union_index_selector) as reader:
         count = 0
         status = [False, False, False]
         for row in reader:
-            if row.id == 2:
-                status[0] = True
             if row.id == 18:
                 status[1] = True
+            elif row.id == 2:
+                status[0] = True
             if row.sensor_name == 'test_sensor':
                 status[2] = True
             count += 1
@@ -842,11 +842,13 @@ def test_should_fail_if_reading_after_stop(synthetic_dataset):
 
 
 def _get_local_fs_url_list(dir_url):
-    url_list = []
     dir_path = urlparse(dir_url).path
-    for file_name in os.listdir(dir_path):
-        url_list.append('file://{dir_path}/{file_name}'.format(dir_path=dir_path, file_name=file_name))
-    return url_list
+    return [
+        'file://{dir_path}/{file_name}'.format(
+            dir_path=dir_path, file_name=file_name
+        )
+        for file_name in os.listdir(dir_path)
+    ]
 
 
 def test_make_batch_reader_with_url_list(scalar_dataset):
@@ -854,20 +856,14 @@ def test_make_batch_reader_with_url_list(scalar_dataset):
     url_list = list(filter(lambda x: x.endswith('.parquet'), url_list))
 
     with make_batch_reader(url_list, workers_count=1) as reader:
-        row_count = 0
-        for batch in reader:
-            row_count += len(batch.id)
-
+        row_count = sum(len(batch.id) for batch in reader)
         assert row_count == 100
 
 
 def test_pyarrow_filters_make_reader(synthetic_dataset):
     with make_reader(synthetic_dataset.url, workers_count=5, num_epochs=1,
-                     filters=[('partition_key', '=', 'p_5'), ]) as reader:
-        uv = set()
-        for data in reader:
-            uv.add(data.partition_key)
-
+                         filters=[('partition_key', '=', 'p_5'), ]) as reader:
+        uv = {data.partition_key for data in reader}
         assert uv == {'p_5'}
 
 

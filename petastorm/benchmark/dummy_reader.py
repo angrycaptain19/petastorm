@@ -48,8 +48,8 @@ def main(device='cpu', batch=1000, dim=64):
     print("Testing DataLoader on cpu")
     reader = DummyReader(int(batch), int(dim))
 
+    iterations = 100
     for batch_size in [10, 100, 1000]:
-        iterations = 100
         loader = DataLoader(reader, shuffling_queue_capacity=batch_size * 10, batch_size=batch_size)
         it = iter(loader)
 
@@ -65,8 +65,8 @@ def main(device='cpu', batch=1000, dim=64):
             batch_size, (iterations * batch_size) / (time.time() - tstart)))
 
     print("Testing BatchedDataLoader on", device)
+    iterations = 100
     for batch_size in [10, 100, 1000, 100000]:
-        iterations = 100
         loader = BatchedDataLoader(reader, shuffling_queue_capacity=batch_size * 10, batch_size=batch_size,
                                    transform_fn=partial(torch.as_tensor, device=device))
         it = iter(loader)

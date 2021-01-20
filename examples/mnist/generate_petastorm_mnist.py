@@ -139,6 +139,5 @@ if __name__ == '__main__':
     else:
         download_dir = args.download_dir
     mnist_data_to_petastorm_dataset(download_dir, args.output_url)
-    if args.download_dir is None:
-        if os.path.exists(download_dir):
-            shutil.rmtree(download_dir)
+    if args.download_dir is None and os.path.exists(download_dir):
+        shutil.rmtree(download_dir)

@@ -156,5 +156,4 @@ def get_row_group_indexes(dataset):
 
     serialized_indexes = dataset_metadata_dict[ROWGROUPS_INDEX_KEY]
 
-    index_dict = depickle_legacy_package_name_compatible(serialized_indexes)
-    return index_dict
+    return depickle_legacy_package_name_compatible(serialized_indexes)

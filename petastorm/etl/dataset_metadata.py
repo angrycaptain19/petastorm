@@ -303,7 +303,7 @@ def _split_row_groups(dataset):
     # We make a dictionary of how many row groups are in each file in
     # order to split them. The Parquet Metadata file stores paths as the
     # relative path from the dataset base dir.
-    row_groups_per_file = dict()
+    row_groups_per_file = {}
     for i in range(dataset.metadata.num_row_groups):
         row_group = dataset.metadata.row_group(i)
         path = row_group.column(0).file_path
